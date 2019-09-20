@@ -1,6 +1,13 @@
 const url = require('url');
 const {errorResponse} = require("./response");
 const {original, resize} = require("./image");
+const stream = require('stream');
+const AWS = require('aws-sdk');
+const s3 = new AWS.S3({
+  signatureVersion: 'v4',
+    accessKeyId: process.env.AWS_ACCESS_KEY,
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
+});
 
 exports.handler = (event) => new Promise((resolve, reject) => {
     const imageBucket = process.env.IMAGE_BUCKET;
@@ -10,10 +17,11 @@ exports.handler = (event) => new Promise((resolve, reject) => {
     }
 
     const path = event.path;
-    const objectKey = url.parse(path).pathname.replace(/^\/+/g, '');
-    console.log('INFO: key: ' + objectKey);
-
-    const queryParameters = event.queryStringParameters || {};
+    const baseKey = url.parse(path).pathname.replace(/^\/+/g, '');
+    //console.log(baseKey);
+    const queryParameters = {width: baseKey.split(".")[1].split("x")[0], height: baseKey.split(".")[1].split("x")[1]};
+    const objectKey = [baseKey.split(".")[0], baseKey.split(".")[2]].join('.');
+    //console.log(objectKey, queryParameters);
 
     if (!queryParameters.width && !queryParameters.height) {
         return original(imageBucket, objectKey)
@@ -28,7 +36,26 @@ exports.handler = (event) => new Promise((resolve, reject) => {
         return reject(errorResponse(`width and height parameters must be integer`, 400));
     }
 
-    return resize(imageBucket, objectKey, width, height)
+    var resizedImage = resize(imageBucket, objectKey, width, height);
+    var savedImage = resizedImage.then(
+        function(response) {
+            return new Promise((resolve, reject) => {
+                console.log(response);
+                const params = {
+                     Bucket: process.env.IMAGE_BUCKET, // pass your bucket name
+                     Key: baseKey, // file will be saved as testBucket/contacts.csv
+                     Body: response.body
+                 };
+
+                 s3.upload(params, function(s3Err, data) {
+                    resolve(response);
+                     if (s3Err) throw s3Err;
+                 });
+            });
+        }
+    );
+
+    return savedImage
         .then(resolve)
         .catch(reject);
 });
