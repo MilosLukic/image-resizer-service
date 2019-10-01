@@ -37,7 +37,7 @@ exports.resize = (imageBucket, objectKey, width, height) => new Promise((resolve
                             mimeType = 'image/jpeg';
                     }
 
-                    const response = successResponse(Buffer.from(fs.readFileSync(resizedFile)).toString('base64'), mimeType);
+                    const response = successResponse(fs.readFileSync(resizedFile), mimeType);
                     fs.unlink(resizedFile, () => console.log("INFO: Resized file cleaned up"));
                     resolve(response);
                 });

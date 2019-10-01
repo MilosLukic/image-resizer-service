@@ -18,10 +18,8 @@ exports.handler = (event) => new Promise((resolve, reject) => {
 
     const path = event.path;
     const baseKey = url.parse(path).pathname.replace(/^\/+/g, '');
-    //console.log(baseKey);
     const queryParameters = {width: baseKey.split(".")[1].split("x")[0], height: baseKey.split(".")[1].split("x")[1]};
     const objectKey = [baseKey.split(".")[0], baseKey.split(".")[2]].join('.');
-    //console.log(objectKey, queryParameters);
 
     if (!queryParameters.width && !queryParameters.height) {
         return original(imageBucket, objectKey)
@@ -31,7 +29,6 @@ exports.handler = (event) => new Promise((resolve, reject) => {
 
     const width = parseInt(queryParameters.width);
     const height = parseInt(queryParameters.height);
-
     if ((queryParameters.width && isNaN(width)) || (queryParameters.height && isNaN(height))) {
         return reject(errorResponse(`width and height parameters must be integer`, 400));
     }
@@ -40,14 +37,15 @@ exports.handler = (event) => new Promise((resolve, reject) => {
     var savedImage = resizedImage.then(
         function(response) {
             return new Promise((resolve, reject) => {
-                console.log(response);
                 const params = {
                      Bucket: process.env.IMAGE_BUCKET, // pass your bucket name
                      Key: baseKey, // file will be saved as testBucket/contacts.csv
-                     Body: response.body
+                     Body: response.body,
+                    CacheControl: 'max-age=12312312',
                  };
 
                  s3.upload(params, function(s3Err, data) {
+                    response.body = response.body.toString("base64");
                     resolve(response);
                      if (s3Err) throw s3Err;
                  });
