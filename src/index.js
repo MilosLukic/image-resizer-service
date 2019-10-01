@@ -41,7 +41,7 @@ exports.handler = (event) => new Promise((resolve, reject) => {
                      Bucket: process.env.IMAGE_BUCKET, // pass your bucket name
                      Key: baseKey, // file will be saved as testBucket/contacts.csv
                      Body: response.body,
-                    CacheControl: 'max-age=12312312',
+                    CacheControl: 'max-age=2312312',
                  };
 
                  s3.upload(params, function(s3Err, data) {
