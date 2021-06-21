@@ -26,11 +26,7 @@ const eventWithInvalidSizes = {
 const eventWithValidImageAndSizes = {
     "body": "",
     "resource": "/{proxy+}",
-    "queryStringParameters": {
-        "width": "50",
-        "height": "50"
-    },
-    "path": "/test-eventWithValidImageAndSizes.jpg"
+    "path": "/test-eventWithValidImageAndSizes.50x50.jpg"
 };
 const eventWithValidImageAndWithoutSizes = {
     "body": "",
@@ -82,7 +78,7 @@ describe(`Failure cases`, () => {
         handler(eventWithNotExistingImage, mockContextCreator)
             .catch(error => {
                 expect(error.statusCode).toBe(
-                    404
+                    400
                 );
                 done();
             });
@@ -117,9 +113,9 @@ describe(`Success cases`, () => {
 
 
         handler(eventWithValidImageAndWithoutSizes, mockContextCreator)
-            .then(response => {
+            .catch(response => {
                 expect(response.statusCode).toBe(
-                    200
+                    400
                 );
                 expect(isBase64(response.body)).toBeTruthy();
                 done();

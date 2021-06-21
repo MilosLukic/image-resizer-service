@@ -17,7 +17,8 @@ exports.handler = (event) => new Promise((resolve, reject) => {
     }
 
     const path = event.path;
-    const baseKey = url.parse(path).pathname.replace(/^\/+/g, '');
+    const pathname = url.parse(path).pathname.replace(/%2F/gi, "\/");
+    const baseKey = pathname.replace(/^\/+/g, '');
     const queryParameters = {width: baseKey.split(".")[1].split("x")[0], height: baseKey.split(".")[1].split("x")[1]};
     const objectKey = [baseKey.split(".")[0], baseKey.split(".")[2]].join('.');
 
@@ -52,7 +53,6 @@ exports.handler = (event) => new Promise((resolve, reject) => {
             });
         }
     );
-
     return savedImage
         .then(resolve)
         .catch(reject);
